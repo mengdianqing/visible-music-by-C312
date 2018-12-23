@@ -125,7 +125,7 @@ uint8_t readCapacitivePin(int pinToMeasure) {
   volatile uint8_t* pin;
                                                       // Here we translate the input pin number from    //在这里，我们将输入引脚号从  
                                                       // Arduino pin number to the AVR PORT, PIN, DDR,   //到AVR端口的Arduino引脚号、PIN、DDR，
-                                                      // and which bit of those registers we care about.   
+                                                      
         
            
  

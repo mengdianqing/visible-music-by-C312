@@ -123,10 +123,8 @@ uint8_t readCapacitivePin(int pinToMeasure) {
   volatile uint8_t* port;
   volatile uint8_t* ddr;
   volatile uint8_t* pin;
-                                                      // Here we translate the input pin number from    //在这里，我们将输入引脚号从  
-                                                      // Arduino pin number to the AVR PORT, PIN, DDR,   //到AVR端口的Arduino引脚号、PIN、DDR，
-                                                      
-        
+                                                      //在这里，我们将输入引脚号从Arduino引脚号转义成AVR端口PIN、DDR
+                                                    
            
  
   byte bitmask;
@@ -142,9 +140,9 @@ uint8_t readCapacitivePin(int pinToMeasure) {
   *ddr &= ~(bitmask);
   *port |= bitmask;
 
-  // Now see how long the pin to get pulled up. This manual unrolling of the loop     检查需要要多长时间，手动展开循环
-  // decreases the number of hardware cycles between each read of the pin,   降低每次引脚读取的硬件的周期
-  // thus increasing sensitivity.   这样就增加了灵敏度
+                                               //      检查需要要多长时间，手动展开循环
+                                              //   降低每次引脚读取的硬件的周期
+                                              //  这样就增加了灵敏度
   uint8_t cycles = 17;
   
   if (*pin & bitmask) 

@@ -6,15 +6,15 @@
 #include <Wire.h>
 #include "ncenB14_nano.h"
 
-U8G2_ST7920_128X64_2_SW_SPI u8g2(U8G2_R2, A4, A2, A1);
+U8G2_ST7920_128X64_2_SW_SPI u8g2(U8G2_R2, A4, A2, A1);  //设置LED字体和输出管脚
 
-int ledPin = A3;
+int ledPin = A3;           //此处接无源蜂鸣器正极
 
-int ledPin1=2;
+int ledPin1=2;             //用D2引脚控制LED灯
 
 SoftwareSerial BT(12, 13);
 
-#define NTD0 -1
+#define NTD0 -1            //列出全部D调的频率
 #define NTD1 294
 #define NTD2 330
 #define NTD3 350
@@ -39,13 +39,13 @@ SoftwareSerial BT(12, 13);
 #define NTDH5 882
 #define NTDH6 990
 #define NTDH7 112
-//列出全部D调的频率
+
 #define WHOLE 1
 #define HALF 0.5
 #define QUARTER 0.25
 #define EIGHTH 0.25
 #define SIXTEENTH 0.625
-short int tune[]=                 
+short int tune[]=                 //根据简谱列出各频率
 {
   NTD3,NTD3,NTD4,NTD5,
   NTD5,NTD4,NTD3,NTD2,
@@ -64,7 +64,7 @@ short int tune[]=
   NTD1,NTD1,NTD2,NTD3,
   NTD2,NTD1,NTD1
 };
-float durt[]=                   
+float durt[]=                   //根据简谱列出各节拍
 {
   1,1,1,1,
   1,1,1,1,
@@ -92,10 +92,10 @@ int length;
 void setup()
 {
   pinMode(ledPin, OUTPUT);
-  Serial.begin(9600);
   Serial.println("Touch senser");
-  length=sizeof(tune)/sizeof(tune[0]);   
-  BT.begin(9600);
+  length=sizeof(tune)/sizeof(tune[0]);   //计算长度
+  Serial.begin(9600);
+  BT.begin(9600);                       //蓝牙模块初始化代码，实际整合过程中略有更改。其中串口波特率为9600
    u8g2.begin();
    u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_ncenB14_nano);
@@ -109,7 +109,7 @@ void fun1(){
   {
     tone(ledPin,tune[x]);
     Serial.println(tune[x]);
-    delay(500*durt[x]);  
+    delay(500*durt[x]);     //这里用来根据节拍调节延时，500这个指数可以自己调整，在该音乐中，我发现用500比较合适。
     noTone(ledPin);
   }
   delay(2000);
@@ -119,29 +119,32 @@ byte state[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 
 uint8_t readCapacitivePin(int pinToMeasure) {
-  // Variables used to translate from Arduino to AVR pin naming
+                                                      // 用于将Arduino转换为AVR管脚命名的变量
   volatile uint8_t* port;
   volatile uint8_t* ddr;
   volatile uint8_t* pin;
-  // Here we translate the input pin number from
-  // Arduino pin number to the AVR PORT, PIN, DDR,
-  // and which bit of those registers we care about.
+                                                      // Here we translate the input pin number from    //在这里，我们将输入引脚号从  
+                                                      // Arduino pin number to the AVR PORT, PIN, DDR,   //到AVR端口的Arduino引脚号、PIN、DDR，
+                                                      // and which bit of those registers we care about.   
+        
+           
+ 
   byte bitmask;
   port = portOutputRegister(digitalPinToPort(pinToMeasure));
   ddr = portModeRegister(digitalPinToPort(pinToMeasure));
   bitmask = digitalPinToBitMask(pinToMeasure);
   pin = portInputRegister(digitalPinToPort(pinToMeasure));
-  // Discharge the pin first by setting it low and output
+                                                            //先释放引脚 再设置为低输出
   *port &= ~(bitmask);
   *ddr |= bitmask;
   delay(1);
-  // Make the pin an input with the internal pull-up on
+                                                           //把引脚设为输入
   *ddr &= ~(bitmask);
   *port |= bitmask;
 
-  // Now see how long the pin to get pulled up. This manual unrolling of the loop
-  // decreases the number of hardware cycles between each read of the pin,
-  // thus increasing sensitivity.
+  // Now see how long the pin to get pulled up. This manual unrolling of the loop     检查需要要多长时间，手动展开循环
+  // decreases the number of hardware cycles between each read of the pin,   降低每次引脚读取的硬件的周期
+  // thus increasing sensitivity.   这样就增加了灵敏度
   uint8_t cycles = 17;
   
   if (*pin & bitmask) 
@@ -191,25 +194,26 @@ void loop ()
 const int ww=8;
 int capvals[8];
 //int freqs[] = {262, 294, 330, 350, 393, 441, 495, 525};
-int freqs[] = {262*ww, 294*ww, 330*ww, 350*ww, 393*ww, 441*ww, 495*ww, 525*ww};
+int freqs[] = {262*ww, 294*ww, 330*ww, 350*ww, 393*ww, 441*ww, 495*ww, 525*ww};  //设置触摸电子琴的频率，经反复调试发现将D调标准频率乘8比较适合
 
  
  if(Serial.available())
   {
     char c=Serial.read();
-    if(c = 'b')
+    if(c = 'b')                 
     {
       BT.println("HELLO WORLD");
     }
-  }
+  }                              //此处代码实现了蓝牙模块与电脑的连接，即可通过Arduino串口监视器部分远程控制手机蓝牙部分。
   if(BT.available())
   {
   char s = BT.read();
-  Serial.println(s);
+  Serial.println(s);            //本部分代码即要实现蓝牙模块对visible music的远程控制，通过向arduino部分发送指令控制乐曲的播放。
+   
   if(s=='a')
   {
     fun1();
-  }
+  }                             //从手机端蓝牙部分输入指令’a’,播放乐曲1.
   }
   
   digitalWrite(ledPin,LOW);
@@ -219,6 +223,7 @@ int freqs[] = {262*ww, 294*ww, 330*ww, 350*ww, 393*ww, 441*ww, 495*ww, 525*ww};
   for(int i = 0; i < 8; i ++) {
     if(capvals[i] > 2) {
       tone(ledPin, freqs[i], 2+00);
+      Serial.println(freqs[i]);
       BT.println(i + 1);
       if(!state[i]) {
     //  u8g2.clearBuffer();
@@ -249,7 +254,7 @@ int freqs[] = {262*ww, 294*ww, 330*ww, 350*ww, 393*ww, 441*ww, 495*ww, 525*ww};
   u8g2.drawPixel(11+i*15, 49);
   u8g2.drawPixel(10+i*15, 49);
   u8g2.drawPixel(11+i*15, 50);
-  u8g2.drawPixel(10+i*15, 50);
+  u8g2.drawPixel(10+i*15, 50);       //此段代码为在LED上分别显示线条 字符和点，已达到最终效果
 //  u8g2.sendBuffer();
     }while(u8g2.nextPage());
       }
